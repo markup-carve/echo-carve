@@ -16,8 +16,11 @@ executable = binding / "examples" / "carve-echo"
 library = binding / "native" / "target" / "release"
 
 environment = os.environ.copy()
-environment["LD_LIBRARY_PATH"] = os.pathsep.join(
-    filter(None, [str(library), environment.get("LD_LIBRARY_PATH")])
+library_path_variable = (
+    "DYLD_LIBRARY_PATH" if sys.platform == "darwin" else "LD_LIBRARY_PATH"
+)
+environment[library_path_variable] = os.pathsep.join(
+    filter(None, [str(library), environment.get(library_path_variable)])
 )
 
 files = sorted(corpus.glob("*.crv"))
