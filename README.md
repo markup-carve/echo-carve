@@ -7,7 +7,7 @@ Build the native bridge first:
 
 ```sh
 CARGO_TARGET_DIR=native/target \
-  cargo build --release --manifest-path native/Cargo.toml
+  cargo build --release --locked --manifest-path native/Cargo.toml
 ```
 
 Then build and run the Echo example. Echo requires `clang` for its final link:
