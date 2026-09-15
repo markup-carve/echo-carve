@@ -1,8 +1,20 @@
 # Performance
 
 The fast-track binding delegates parsing and rendering to the same Rust engine
-as `carve-rs`. Its additional work is one C call and one copy from the returned
-Rust buffer into an owned Echo string.
+as `carve-rs`. Its additional work is the C ABI boundary, including per-call
+UTF-8 validation, the panic guard and boxed-slice handoff, followed by a copy
+from the returned Rust buffer into an owned Echo string.
+
+## Compared implementations
+
+- **Echo binding:** Echo calls the C ABI in `native/src/lib.rs`, which calls
+  `carve::to_html` from [`markup-carve/carve-rs`][carve-rs].
+- **Direct `carve-rs`:** the Rust benchmark calls the same `carve::to_html`
+  function directly, without Echo, the C ABI, or the output copy.
+
+Both paths use `carve-rs` commit `d512479`, pinned by `native/Cargo.toml` and
+`native/Cargo.lock`. This isolates the cost of the Echo integration; it does
+not compare two different Carve parsers.
 
 ## Measurement
 
@@ -42,10 +54,10 @@ Test machine:
 - Echo 0.3.14, release build
 - Rust 1.97.1, release build with thin LTO and one codegen unit
 
-| Entry point | Median | Peak RSS |
-| --- | ---: | ---: |
-| Echo binding | 1.21 s | 4.5 MiB |
-| Direct Rust | 1.25 s | 4.2 MiB |
+| Entry point | Call path | Median | Peak RSS |
+| --- | --- | ---: | ---: |
+| Echo binding | Echo → C ABI → `carve-rs` | 1.21 s | 4.5 MiB |
+| Direct `carve-rs` | Rust → `carve-rs` | 1.25 s | 4.2 MiB |
 
 The medians do not show a meaningful slowdown at the Echo boundary. They are
 not evidence that Echo is faster than Rust; no uncertainty estimate was
@@ -53,3 +65,5 @@ recorded for this exploratory measurement.
 
 These numbers measure repeated in-process rendering. They do not measure cold
 compilation, dynamic-library deployment, or a native parser written in Echo.
+
+[carve-rs]: https://github.com/markup-carve/carve-rs/tree/d512479051a72a045581e2c289d6b6c7555ee1e1
