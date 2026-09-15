@@ -1,7 +1,7 @@
 # Carve for Echo
 
-This experimental binding exposes the conforming `carve-rs` HTML renderer to
-the [Echo programming language](https://echoc.dev/) through a minimal C ABI.
+Carve HTML rendering for the [Echo programming language](https://echoc.dev/),
+backed by the conforming `carve-rs` engine through a small C ABI.
 
 Build the native bridge first:
 
@@ -19,26 +19,12 @@ LD_LIBRARY_PATH=../native/target/release ./render # Linux
 # DYLD_LIBRARY_PATH=../native/target/release ./render # macOS
 ```
 
-The public Echo API is deliberately narrow:
+Use it from Echo:
 
 ```echo
 string $html = carve::to_html($source);
 ```
 
-Use `carve::try_to_html` to receive `result<string, carve::Error>` instead of
-terminating on invalid UTF-8 or a native failure.
-
-The `carve-echo` example accepts a `.crv` file and writes HTML:
-
-```sh
-echoc build --release --target carve-echo -o carve-echo
-LD_LIBRARY_PATH=../native/target/release ./carve-echo document.crv
-```
-
-The Echo wrapper copies the returned HTML into an owned Echo `string`, then
-immediately releases the Rust allocation. Invalid UTF-8 and native failures
-terminate with an error; the underlying `carve::to_html` operation is otherwise
-infallible.
-
-Run `python3 test_corpus.py /path/to/carve/tests/corpus` from the repository
-root to compare the Echo output with every shared HTML fixture.
+For the backend choice, API contract, validation, and measurements, see
+[Design](docs/design.md), [Testing](docs/testing.md), and
+[Performance](docs/performance.md).
