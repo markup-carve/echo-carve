@@ -1,4 +1,4 @@
-#[module: "carve_echo"]
+#[module: "echo_carve"]
 #[version: "0.1.0"]
 
 #[link: lib "carve_ffi"]

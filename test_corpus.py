@@ -12,7 +12,7 @@ binding = Path(__file__).resolve().parent
 if len(sys.argv) != 2:
     sys.exit("usage: test_corpus.py /path/to/carve/tests/corpus")
 corpus = Path(sys.argv[1]).resolve()
-executable = binding / "examples" / "carve-echo"
+executable = binding / "examples" / "echo-carve"
 library = binding / "native" / "target" / "release"
 
 environment = os.environ.copy()

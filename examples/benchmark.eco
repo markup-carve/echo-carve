@@ -1,7 +1,7 @@
 $args = std::env::argv();
 
 if ($args->count() != 2) {
-    die('usage: benchmark-echo <input.crv>');
+    die('usage: echo-carve-benchmark <input.crv>');
 }
 
 string $source = guard std::io::readfile($args[1]) else {

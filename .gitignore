@@ -2,5 +2,7 @@
 /**/ecobuild/
 /examples/render
 /examples/carve-echo
+/examples/echo-carve
 /examples/benchmark-echo
+/examples/echo-carve-benchmark
 /__pycache__/
