@@ -13,7 +13,7 @@ Build the Echo command-line example:
 
 ```sh
 cd examples
-echoc build --release --target carve-echo -o carve-echo
+echoc build --release --target echo-carve -o echo-carve
 cd ..
 ```
 

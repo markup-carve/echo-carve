@@ -31,7 +31,7 @@ CARGO_TARGET_DIR=native/target \
   cargo build --release --locked --manifest-path native/Cargo.toml \
   --bin benchmark
 cd examples
-echoc build --release --target benchmark-echo -o benchmark-echo
+echoc build --release --target echo-carve-benchmark -o echo-carve-benchmark
 cd ..
 ```
 
@@ -40,7 +40,7 @@ path. `/usr/bin/time` is the GNU time binary used for the table:
 
 ```sh
 LD_LIBRARY_PATH=native/target/release \
-  /usr/bin/time -f '%e s, %M KiB' examples/benchmark-echo "$FIXTURE"
+  /usr/bin/time -f '%e s, %M KiB' examples/echo-carve-benchmark "$FIXTURE"
 /usr/bin/time -f '%e s, %M KiB' native/target/release/benchmark "$FIXTURE"
 ```
 
