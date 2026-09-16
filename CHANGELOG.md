@@ -7,6 +7,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped the pinned `carve-rs` revision to `fd79f05` (19 commits, renderer and
+  writer fixes); the Carve specification the corpus reads is unchanged
+
 ### Added
 
 - Carve HTML rendering for Echo through a C ABI over `carve-rs`

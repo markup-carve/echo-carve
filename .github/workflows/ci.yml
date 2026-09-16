@@ -17,7 +17,7 @@ env:
   # The pin the bridge is built against. `engine-pin` checks it is real and
   # says how far main has moved; the corpus job renders against this revision's
   # spec submodule, so the fixture count in docs/testing.md stays meaningful.
-  CARVE_RS_REV: d512479051a72a045581e2c289d6b6c7555ee1e1
+  CARVE_RS_REV: fd79f056f11b3f2a8472c8756146e2e98331a665
 
 jobs:
   native:

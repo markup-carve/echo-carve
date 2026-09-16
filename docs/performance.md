@@ -12,16 +12,20 @@ from the returned Rust buffer into an owned Echo string.
 - **Direct `carve-rs`:** the Rust benchmark calls the same `carve::to_html`
   function directly, without Echo, the C ABI, or the output copy.
 
-Both paths use `carve-rs` commit `d512479`, pinned by `native/Cargo.toml` and
+Both paths use the `carve-rs` revision pinned by `native/Cargo.toml` and
 `native/Cargo.lock`. This isolates the cost of the Echo integration; it does
 not compare two different Carve parsers.
+
+The numbers below were measured at commit `d512479`. The bridge now pins
+`fd79f05`, whose `tests/spec` submodule is the same commit, so the fixture the
+benchmark loads is byte-identical; the timings have not been re-measured.
 
 ## Measurement
 
 The included Echo and Rust benchmarks each load
 `182-openers-past-the-nesting-cap-are-one-paragraph.crv` from the Carve spec
-corpus at commit `56d76d7` (the `tests/spec` submodule of `carve-rs` commit
-`d512479`). That 2,032-byte nesting-stress fixture is loaded once and rendered
+corpus at commit `56d76d7` (the `tests/spec` submodule of both revisions
+above). That 2,032-byte nesting-stress fixture is loaded once and rendered
 1,000 times. See [Testing](testing.md) for the submodule checkout commands.
 
 Build both entry points:
@@ -66,4 +70,4 @@ recorded for this exploratory measurement.
 These numbers measure repeated in-process rendering. They do not measure cold
 compilation, dynamic-library deployment, or a native parser written in Echo.
 
-[carve-rs]: https://github.com/markup-carve/carve-rs/tree/d512479051a72a045581e2c289d6b6c7555ee1e1
+[carve-rs]: https://github.com/markup-carve/carve-rs/tree/fd79f056f11b3f2a8472c8756146e2e98331a665
