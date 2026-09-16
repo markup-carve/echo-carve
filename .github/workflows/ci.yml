@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # The pin the bridge is built against. `engine-pin` checks it is real and
+  # says how far main has moved; the corpus job renders against this revision's
+  # spec submodule, so the fixture count in docs/testing.md stays meaningful.
+  CARVE_RS_REV: d512479051a72a045581e2c289d6b6c7555ee1e1
+
+jobs:
+  native:
+    name: The native bridge builds, and its tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install the Rust toolchain
+        run: rustup toolchain install stable --profile minimal --component rustfmt,clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native
+
+      - name: Formatting
+        run: cargo fmt --manifest-path native/Cargo.toml --check
+
+      - name: Lints
+        run: cargo clippy --locked --manifest-path native/Cargo.toml --all-targets -- -D warnings
+
+      - name: Tests
+        run: cargo test --locked --manifest-path native/Cargo.toml
+
+      # `--locked` here too: a release build that silently updates the lock file
+      # is a different bridge from the one the tests above just proved.
+      - name: Release build
+        run: cargo build --release --locked --manifest-path native/Cargo.toml
+
+  engine-pin:
+    name: The pinned carve-rs revision is real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # A pin nobody checks is a pin that rots. This FAILS only when the
+      # revision cannot be found at all - a typo, or a force-pushed branch that
+      # dropped it - because that breaks every build. Falling behind main is
+      # upstream moving and cannot be fixed from this repository, so it warns.
+      - name: The revision exists on carve-rs, and main has not left it behind silently
+        run: |
+          set -euo pipefail
+          rev="$(sed -n 's/.*rev = "\([0-9a-f]\{40\}\)".*/\1/p' native/Cargo.toml | head -1)"
+          if [ -z "$rev" ]; then
+            echo "::error::native/Cargo.toml names no 40-character carve-rs revision"
+            exit 1
+          fi
+          if [ "$rev" != "$CARVE_RS_REV" ]; then
+            echo "::error::native/Cargo.toml pins $rev but this workflow's CARVE_RS_REV is $CARVE_RS_REV; move them together"
+            exit 1
+          fi
+          git clone --filter=blob:none --no-checkout https://github.com/markup-carve/carve-rs.git engine
+          cd engine
+          if ! git cat-file -e "$rev^{commit}" 2>/dev/null; then
+            echo "::error::carve-rs has no commit $rev - the bridge cannot build"
+            exit 1
+          fi
+          echo "pinned $rev ($(git log -1 --format=%s "$rev"))"
+          if git merge-base --is-ancestor "$rev" origin/main; then
+            behind="$(git rev-list --count "$rev..origin/main")"
+            echo "carve-rs main is $behind commit(s) ahead"
+            [ "$behind" -eq 0 ] || echo "::warning::the bridge is $behind commit(s) behind carve-rs main"
+          else
+            echo "::warning::$rev is not an ancestor of carve-rs main - it may sit on a branch that was rewritten"
+          fi
+
+  corpus:
+    name: Every shared Carve fixture renders through the binding
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install the Rust toolchain
+        run: rustup toolchain install stable --profile minimal
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native
+
+      # Echo links through clang, so the example cannot build without it.
+      - name: Install clang
+        run: sudo apt-get update && sudo apt-get install -y clang
+
+      - name: Install the Echo compiler
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/echolang/echo/master/install.sh | bash
+          echo "$HOME/.echo/bin" >> "$GITHUB_PATH"
+
+      - name: Report the Echo version
+        run: echoc --version || echoc version
+
+      - name: Build the native bridge
+        run: CARGO_TARGET_DIR=native/target cargo build --release --locked --manifest-path native/Cargo.toml
+
+      - name: Build the Echo example
+        working-directory: examples
+        run: echoc build --release --target echo-carve -o echo-carve
+
+      # The corpus is the engine's own, read at the revision the bridge is
+      # built against, so a fixture count in docs/testing.md means something.
+      - name: Check out the corpus the pin was measured against
+        uses: actions/checkout@v5
+        with:
+          repository: markup-carve/carve-rs
+          ref: ${{ env.CARVE_RS_REV }}
+          submodules: recursive
+          path: engine
+
+      - name: Render every fixture
+        run: python3 test_corpus.py engine/tests/spec/tests/corpus
