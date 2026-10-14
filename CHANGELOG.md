@@ -9,8 +9,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
-- Bumped the pinned `carve-rs` revision to `fd79f05` (19 commits, renderer and
-  writer fixes); the Carve specification the corpus reads is unchanged
+- The bridge builds against carve-rs 0.1.9, pinned at its release tag commit
+  `d9f5ea1`, and renders all 2,508 fixtures of its spec corpus
 
 ### Added
 

@@ -17,7 +17,7 @@ env:
   # The pin the bridge is built against. `engine-pin` checks it is real and
   # says how far main has moved; the corpus job renders against this revision's
   # spec submodule, so the fixture count in docs/testing.md stays meaningful.
-  CARVE_RS_REV: d7837249c64b88879b04cd71b8b5555ff246e16f
+  CARVE_RS_REV: d9f5ea1efc0e1334cf7cb1193c2114e77706678a
 
 # Every job declares timeout-minutes. Without one GitHub applies a 360-minute
 # default, roughly 900x the median job in this org, so a hung step burns hours
