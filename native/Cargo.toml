@@ -12,7 +12,7 @@ name = "carve_ffi"
 crate-type = ["cdylib"]
 
 [dependencies]
-carve-lang = { git = "https://github.com/markup-carve/carve-rs.git", rev = "d7837249c64b88879b04cd71b8b5555ff246e16f", default-features = false }
+carve-lang = { git = "https://github.com/markup-carve/carve-rs.git", rev = "204af9cd5a2e144c54bca7efa0146cdd0a882cc6", default-features = false }
 
 [profile.release]
 lto = "thin"
