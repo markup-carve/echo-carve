@@ -33,8 +33,8 @@ revision may contain a different number of fixtures.
 
 Three more fixtures at that pin are ones `carve-rs` itself declares behind its
 spec pin (markup-carve/carve-rs#4259). `KNOWN_BEHIND` in `test_corpus.py`
-lists them; the runner fails if one of them starts passing, so the list
-shrinks with the pin.
+lists them with the output carve-rs declares for them. The runner fails if one
+renders anything else, including the golden, so the list shrinks with the pin.
 
 CI runs exactly this, so the count above is the one the workflow prints rather
 than a figure from one machine.
