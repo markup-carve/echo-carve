@@ -11,8 +11,9 @@ extern "C" {
 enum carve_status {
     CARVE_STATUS_OK = 0,
     CARVE_STATUS_INVALID_POINTER = 1,
-    CARVE_STATUS_INVALID_UTF8 = 2,
-    CARVE_STATUS_PANIC = 3
+    CARVE_STATUS_INPUT_INVALID = 2,
+    CARVE_STATUS_PANIC = 3,
+    CARVE_STATUS_ENGINE_ERROR = 4
 };
 
 int32_t carve_to_html(

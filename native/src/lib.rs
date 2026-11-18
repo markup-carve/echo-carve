@@ -1,19 +1,22 @@
 //! Minimal C ABI used by the Echo language binding.
 
+use carve2::api::{self, Error, Options};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
 use std::slice;
-use std::str;
 
 const STATUS_OK: i32 = 0;
 const STATUS_INVALID_POINTER: i32 = 1;
-const STATUS_INVALID_UTF8: i32 = 2;
+const STATUS_INPUT_INVALID: i32 = 2;
 const STATUS_PANIC: i32 = 3;
+const STATUS_ENGINE_ERROR: i32 = 4;
 
-/// Render UTF-8 Carve source to UTF-8 HTML.
+/// Render Carve source bytes to UTF-8 HTML.
 ///
-/// Returns zero on success, one for invalid pointers, two for invalid UTF-8,
-/// and three if the Rust implementation panics. On success, the caller owns
+/// Returns zero on success, one for invalid pointers, two for source input
+/// rejected by the engine, three for a Rust panic, and four for another engine
+/// error. Malformed UTF-8 source bytes are replaced, as in Carve 0.2.
+/// On success, the caller owns
 /// `out_data` and must release it with [`carve_html_free`].
 ///
 /// # Safety
@@ -43,20 +46,17 @@ pub unsafe extern "C" fn carve_to_html(
     } else {
         slice::from_raw_parts(input, input_len)
     };
-    let source = match str::from_utf8(bytes) {
-        Ok(source) => source,
-        Err(_) => return STATUS_INVALID_UTF8,
-    };
-
-    match catch_unwind(AssertUnwindSafe(|| carve::to_html(source))) {
-        Ok(html) if html.is_empty() => STATUS_OK,
-        Ok(html) => {
+    match catch_unwind(AssertUnwindSafe(|| api::render(bytes, &Options::default()))) {
+        Ok(Ok(html)) if html.is_empty() => STATUS_OK,
+        Ok(Ok(html)) => {
             let mut bytes = html.into_bytes().into_boxed_slice();
             ptr::write(out_data, bytes.as_mut_ptr());
             ptr::write(out_len, bytes.len());
             std::mem::forget(bytes);
             STATUS_OK
         }
+        Ok(Err(Error::Input { .. })) => STATUS_INPUT_INVALID,
+        Ok(Err(_)) => STATUS_ENGINE_ERROR,
         Err(_) => STATUS_PANIC,
     }
 }
@@ -86,23 +86,46 @@ mod tests {
         let mut len = 0;
         let status = unsafe { carve_to_html(source.as_ptr(), source.len(), &mut data, &mut len) };
         assert_eq!(status, STATUS_OK);
-        let html = unsafe { str::from_utf8(slice::from_raw_parts(data, len)).unwrap() };
-        assert_eq!(
-            html,
-            "<section id=\"Hello\">\n  <h1>Hello</h1>\n  <p><em>italic</em> and <strong>bold</strong>.</p>\n</section>"
-        );
+        let html = unsafe { std::str::from_utf8(slice::from_raw_parts(data, len)).unwrap() };
+        assert_eq!(html, "<section id=\"Hello\">\n  <h1>Hello</h1>\n  <p><em>italic</em> and <strong>bold</strong>.</p>\n</section>");
         unsafe { carve_html_free(data, len) };
     }
 
     #[test]
-    fn rejects_invalid_utf8_without_allocating() {
+    fn replaces_invalid_utf8_and_releases_html() {
         let source = [0xff];
         let mut data = ptr::null_mut();
         let mut len = 0;
         let status = unsafe { carve_to_html(source.as_ptr(), source.len(), &mut data, &mut len) };
-        assert_eq!(status, STATUS_INVALID_UTF8);
-        assert!(data.is_null());
-        assert_eq!(len, 0);
+        assert_eq!(status, STATUS_OK);
+        let html = unsafe { std::str::from_utf8(slice::from_raw_parts(data, len)).unwrap() };
+        assert_eq!(html, "<p>�</p>");
+        unsafe { carve_html_free(data, len) };
+    }
+
+    #[test]
+    fn uses_secure_html_defaults() {
+        let source = b"```=html\n<script>alert(1)</script>\n```";
+        let mut data = ptr::null_mut();
+        let mut len = 0;
+        let status = unsafe { carve_to_html(source.as_ptr(), source.len(), &mut data, &mut len) };
+        assert_eq!(status, STATUS_OK);
+        let html = unsafe { std::str::from_utf8(slice::from_raw_parts(data, len)).unwrap() };
+        assert!(!html.contains("<script>"));
+        assert!(html.contains("&lt;script&gt;"));
+        unsafe { carve_html_free(data, len) };
+    }
+
+    #[test]
+    fn denies_unsafe_link_schemes() {
+        let source = b"[link](javascript:alert(1))";
+        let mut data = ptr::null_mut();
+        let mut len = 0;
+        let status = unsafe { carve_to_html(source.as_ptr(), source.len(), &mut data, &mut len) };
+        assert_eq!(status, STATUS_OK);
+        let html = unsafe { std::str::from_utf8(slice::from_raw_parts(data, len)).unwrap() };
+        assert!(!html.contains("href=\"javascript:"));
+        unsafe { carve_html_free(data, len) };
     }
 
     #[test]

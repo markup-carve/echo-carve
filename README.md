@@ -1,7 +1,13 @@
 # Carve for Echo
 
-Carve HTML rendering for the [Echo programming language](https://echoc.dev/),
-backed by the conforming `carve-rs` engine through a small C ABI.
+Carve 0.2 HTML rendering for the [Echo programming language](https://echoc.dev/),
+backed by the unreleased `carve2` engine on the `carve-rs` `next2` branch through
+a small C ABI. The dependency is pinned to a commit, not a registry release.
+
+The Echo API is `carve::try_to_html` or `carve::to_html`. It uses Carve 0.2
+defaults: raw HTML is escaped and unsafe URL schemes are denied. The binding
+does not expose render options. Malformed UTF-8 source bytes become replacement
+characters, as required by the 0.2 source contract.
 
 Build the native bridge first:
 
