@@ -1,6 +1,6 @@
 //! Minimal C ABI used by the Echo language binding.
 
-use carve2::api::{self, Error, Options};
+use carve::api::{self, Error, Options};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::ptr;
 use std::slice;
