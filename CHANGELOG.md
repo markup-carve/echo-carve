@@ -5,6 +5,7 @@
 - Port the native HTML bridge to the pinned, unreleased Carve 0.2 Rust API.
 - Use Carve 0.2 secure defaults and malformed UTF-8 replacement behavior.
 - Validate the Echo binding against verified Carve 0.2 conformance examples.
+- Pin the renamed engine: the `carve-lang` crate (library `carve`) on carve-rs `next2` at `7fb7c249`, where `carve2` used to be, built without its file-system feature.
 
 ## [0.1.0] - 2026-10-24
 

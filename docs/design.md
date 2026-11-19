@@ -24,7 +24,7 @@ The native library exposes two C functions. One renders Carve source bytes to an
 allocated UTF-8 HTML buffer; the other releases that buffer. Rust catches
 unwinding panics before they cross the C boundary.
 
-The bridge calls `carve2::api::render` with `Options::default()`. The defaults
+The bridge calls `carve::api::render` with `Options::default()`. The defaults
 escape raw HTML and deny unsafe URL schemes. The 0.2 API replaces malformed
 UTF-8 source bytes with replacement characters. It can refuse an input that
 exceeds its profile limit. The Echo wrapper copies successful output into an

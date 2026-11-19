@@ -1,7 +1,7 @@
 # Carve for Echo
 
 Carve 0.2 HTML rendering for the [Echo programming language](https://echoc.dev/),
-backed by the unreleased `carve2` engine on the `carve-rs` `next2` branch through
+backed by the unreleased `carve-lang` engine on the `carve-rs` `next2` branch through
 a small C ABI. The dependency is pinned to a commit, not a registry release.
 
 The Echo API is `carve::try_to_html` or `carve::to_html`. It uses Carve 0.2

@@ -11,7 +11,7 @@ import tempfile
 
 binding = Path(__file__).resolve().parent
 if len(sys.argv) != 2:
-    sys.exit("usage: test_corpus.py /path/to/carve-rs/v2/spec-conformance/examples.json")
+    sys.exit("usage: test_corpus.py /path/to/carve-rs/spec-conformance/examples.json")
 examples_path = Path(sys.argv[1]).resolve()
 executable = binding / "examples" / "echo-carve"
 library = Path(os.environ.get("CARGO_TARGET_DIR", binding / "native" / "target")) / "release"

@@ -1,6 +1,6 @@
 # Performance
 
-The Echo binding calls `carve2::api::render` from the pinned Carve 0.2 Rust
+The Echo binding calls `carve::api::render` from the pinned Carve 0.2 Rust
 engine. Each call validates pointer and length arguments, passes source bytes to
 the engine, catches Rust panics, and returns an owned HTML buffer. The Echo
 wrapper copies that buffer into its own string and releases the Rust allocation.
