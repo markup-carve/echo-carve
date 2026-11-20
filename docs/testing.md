@@ -24,7 +24,7 @@ commit and run the examples through the Echo executable:
 
 ```sh
 git clone --branch next2 https://github.com/markup-carve/carve-rs.git engine
-git -C engine checkout 7fb7c24956298e78bc4716ff7e0e1fb96e60ecdf
+git -C engine checkout 388348a0ffcc54e508a37af1a6952c01cb16e137
 CARGO_TARGET_DIR=native/target python3 test_corpus.py engine/spec-conformance/examples.json
 ```
 
