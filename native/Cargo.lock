@@ -43,7 +43,7 @@ dependencies = [
 [[package]]
 name = "carve-lang"
 version = "0.1.14"
-source = "git+https://github.com/markup-carve/carve-rs.git?rev=388348a0ffcc54e508a37af1a6952c01cb16e137#388348a0ffcc54e508a37af1a6952c01cb16e137"
+source = "git+https://github.com/markup-carve/carve-rs.git?rev=284c05f30da3a00a0e7a1fd42fea9f5ce430d6dd#284c05f30da3a00a0e7a1fd42fea9f5ce430d6dd"
 dependencies = [
  "bumpalo",
  "carve-lang 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -94,7 +94,7 @@ dependencies = [
 name = "echo-carve-native"
 version = "0.1.0"
 dependencies = [
- "carve-lang 0.1.14 (git+https://github.com/markup-carve/carve-rs.git?rev=388348a0ffcc54e508a37af1a6952c01cb16e137)",
+ "carve-lang 0.1.14 (git+https://github.com/markup-carve/carve-rs.git?rev=284c05f30da3a00a0e7a1fd42fea9f5ce430d6dd)",
 ]
 
 [[package]]
