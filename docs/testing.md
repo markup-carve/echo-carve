@@ -1,15 +1,16 @@
 # Testing
 
-Build and test the native boundary:
+The 0.2 bridge pins the `carve-lang` crate (library `carve`) from a commit on the `carve-rs` `next2`
+branch. Cargo resolves that Git dependency and records it in `native/Cargo.lock`.
+Build and test the native boundary with four workers:
 
 ```sh
-CARGO_TARGET_DIR=native/target \
-  cargo test --locked --manifest-path native/Cargo.toml
-CARGO_TARGET_DIR=native/target \
-  cargo build --release --locked --manifest-path native/Cargo.toml
+export CARGO_BUILD_JOBS=4
+CARGO_TARGET_DIR=native/target cargo test --locked --manifest-path native/Cargo.toml
+CARGO_TARGET_DIR=native/target cargo build --release --locked --manifest-path native/Cargo.toml
 ```
 
-Build the Echo command-line example:
+Build the Echo command-line example with Echo 0.16 or newer:
 
 ```sh
 cd examples
@@ -17,19 +18,17 @@ echoc build --release --target echo-carve -o echo-carve
 cd ..
 ```
 
-Compare it with the shared Carve HTML corpus from the repository root:
+The integration check reads verified default-option HTML examples from the
+pinned Rust engine's `spec-conformance/examples.json`. Check out that exact
+commit and run the examples through the Echo executable:
 
 ```sh
-git -C /path/to/carve-rs checkout 0.1.11
-git -C /path/to/carve-rs submodule update --init tests/spec
-python3 test_corpus.py /path/to/carve-rs/tests/spec/tests/corpus
+git clone --branch next2 https://github.com/markup-carve/carve-rs.git engine
+git -C engine checkout 8388a5a4f77452174ad04d9ee99f03a35244a960
+CARGO_TARGET_DIR=native/target python3 test_corpus.py engine/spec-conformance/examples.json
 ```
 
-The runner checks every `.crv`/`.html` pair and verifies that invalid UTF-8 is
-reported as status 2. The reported 2,508 passing fixtures are from `carve-rs`
-0.1.11 (commit `da5518c`), the revision pinned in `native/Cargo.toml`. Its
-`tests/spec` submodule pins the Carve specification at commit `7f080ef`; another
-revision may contain a different number of fixtures.
-
-CI runs exactly this, so the count above is the one the workflow prints rather
-than a figure from one machine.
+The runner also checks that malformed UTF-8 bytes render with a replacement
+character. Native unit tests check buffer ownership, the empty input, null
+pointers, and the secure raw HTML default. CI runs these checks for pull
+requests to `next2`.
