@@ -16,7 +16,7 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_BUILD_JOBS: 4
   # Keep this revision in sync with native/Cargo.toml.
-  CARVE_RS_REV: 284c05f30da3a00a0e7a1fd42fea9f5ce430d6dd
+  CARVE_RS_REV: 8388a5a4f77452174ad04d9ee99f03a35244a960
 
 # Every job declares timeout-minutes. Without one GitHub applies a 360-minute
 # default, roughly 900x the median job in this org, so a hung step burns hours
