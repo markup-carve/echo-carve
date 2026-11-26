@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-The released 0.1 line is maintained on `main`. The unreleased 0.2 port is on
-`next2`.
+The released 0.1 line is maintained on the `0.1` branch. The unreleased 0.2 port
+is on `main`.
 
 ## Reporting a vulnerability
 
