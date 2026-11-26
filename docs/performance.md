@@ -1,73 +1,49 @@
 # Performance
 
-The fast-track binding delegates parsing and rendering to the same Rust engine
-as `carve-rs`. Its additional work is the C ABI boundary, including per-call
-UTF-8 validation, the panic guard and boxed-slice handoff, followed by a copy
-from the returned Rust buffer into an owned Echo string.
+The Echo binding calls `carve::api::render` from the pinned Carve 0.2 Rust
+engine. Each call validates pointer and length arguments, passes source bytes to
+the engine, catches Rust panics, and returns an owned HTML buffer. The Echo
+wrapper copies that buffer into its own string and releases the Rust allocation.
+The renderer uses `Options::default()`, including the secure raw HTML and URL
+policy defaults.
 
-## Compared implementations
+The repository includes two benchmark entry points. The Echo program calls the
+C ABI and copies the result. The Rust program calls the public 0.2 render API
+directly. Both render the same input 1,000 times. This isolates the binding
+cost; it is not a comparison of two parsers.
 
-- **Echo binding:** Echo calls the C ABI in `native/src/lib.rs`, which calls
-  `carve::to_html` from [`markup-carve/carve-rs`][carve-rs].
-- **Direct `carve-rs`:** the Rust benchmark calls the same `carve::to_html`
-  function directly, without Echo, the C ABI, or the output copy.
-
-Both paths use the `carve-rs` revision pinned by `native/Cargo.toml` and
-`native/Cargo.lock`. This isolates the cost of the Echo integration; it does
-not compare two different Carve parsers.
-
-The numbers below were measured at commit `d512479`. The bridge now pins
-`fd79f05`, whose `tests/spec` submodule is the same commit, so the fixture the
-benchmark loads is byte-identical; the timings have not been re-measured.
-
-## Measurement
-
-The included Echo and Rust benchmarks each load
-`182-openers-past-the-nesting-cap-are-one-paragraph.crv` from the Carve spec
-corpus at commit `56d76d7` (the `tests/spec` submodule of both revisions
-above). That 2,032-byte nesting-stress fixture is loaded once and rendered
-1,000 times. See [Testing](testing.md) for the submodule checkout commands.
-
-Build both entry points:
+Build them with the pinned dependency:
 
 ```sh
-CARGO_TARGET_DIR=native/target \
-  cargo build --release --locked --manifest-path native/Cargo.toml \
-  --bin benchmark
+export CARGO_BUILD_JOBS=4
+CARGO_TARGET_DIR=native/target cargo build --release --locked --manifest-path native/Cargo.toml --bin benchmark
 cd examples
 echoc build --release --target echo-carve-benchmark -o echo-carve-benchmark
 cd ..
 ```
 
-Measure them from the repository root, replacing `$FIXTURE` with the fixture
-path. `/usr/bin/time` is the GNU time binary used for the table:
+Measure both programs on each input. `FIXTURE` is a Carve 0.2 source file:
 
 ```sh
-LD_LIBRARY_PATH=native/target/release \
-  /usr/bin/time -f '%e s, %M KiB' examples/echo-carve-benchmark "$FIXTURE"
+LD_LIBRARY_PATH=native/target/release /usr/bin/time -f '%e s, %M KiB' examples/echo-carve-benchmark "$FIXTURE"
 /usr/bin/time -f '%e s, %M KiB' native/target/release/benchmark "$FIXTURE"
 ```
 
-The table reports medians from twelve alternating runs of each command to
-reduce ordering and temperature effects.
+The 0.1 measurements are not comparable to 0.2 because the engine and the
+benchmark call changed together. The latest local 0.2 measurements are recorded
+below after the three input sizes have been run.
 
-Test machine:
+## Local Carve 0.2 measurement
 
-- AMD Ryzen 9 PRO 7940HS
-- Linux x86-64
-- Echo 0.3.14, release build
-- Rust 1.97.1, release build with thin LTO and one codegen unit
+On 2026-11-19, with the pinned engine commit, Rust 1.99.1, Echo 0.16.0, and an
+Intel Core i7-10750H, each program rendered generated paragraph source 1,000
+times. The input sizes were 2,042, 8,180, and 32,754 bytes. The table shows
+one wall-clock run per size. Other builds were active on the shared machine, so
+these numbers are a functional scale check, not a stable binding-overhead
+estimate. Both paths produced the same total HTML byte counts.
 
-| Entry point | Call path | Median | Peak RSS |
-| --- | --- | ---: | ---: |
-| Echo binding | Echo → C ABI → `carve-rs` | 1.21 s | 4.5 MiB |
-| Direct `carve-rs` | Rust → `carve-rs` | 1.25 s | 4.2 MiB |
-
-The medians do not show a meaningful slowdown at the Echo boundary. They are
-not evidence that Echo is faster than Rust; no uncertainty estimate was
-recorded for this exploratory measurement.
-
-These numbers measure repeated in-process rendering. They do not measure cold
-compilation, dynamic-library deployment, or a native parser written in Echo.
-
-[carve-rs]: https://github.com/markup-carve/carve-rs/tree/fd79f056f11b3f2a8472c8756146e2e98331a665
+| Input size | Direct Rust | Echo binding | Total HTML bytes |
+| --- | ---: | ---: | ---: |
+| 2,042 bytes | 0.716 s | 0.418 s | 4,854,000 |
+| 8,180 bytes | 2.211 s | 2.430 s | 19,362,000 |
+| 32,754 bytes | 10.598 s | 11.427 s | 77,446,000 |
