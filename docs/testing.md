@@ -1,6 +1,6 @@
 # Testing
 
-The 0.2 bridge pins the `carve-lang` crate (library `carve`) from a commit on the `carve-rs` `next2`
+The 0.2 bridge pins the `carve-lang` crate (library `carve`) from a commit on the `carve-rs` `main`
 branch. Cargo resolves that Git dependency and records it in `native/Cargo.lock`.
 Build and test the native boundary with four workers:
 
@@ -23,7 +23,7 @@ pinned Rust engine's `spec-conformance/examples.json`. Check out that exact
 commit and run the examples through the Echo executable:
 
 ```sh
-git clone --branch next2 https://github.com/markup-carve/carve-rs.git engine
+git clone https://github.com/markup-carve/carve-rs.git engine
 git -C engine checkout 8388a5a4f77452174ad04d9ee99f03a35244a960
 CARGO_TARGET_DIR=native/target python3 test_corpus.py engine/spec-conformance/examples.json
 ```
@@ -31,4 +31,4 @@ CARGO_TARGET_DIR=native/target python3 test_corpus.py engine/spec-conformance/ex
 The runner also checks that malformed UTF-8 bytes render with a replacement
 character. Native unit tests check buffer ownership, the empty input, null
 pointers, and the secure raw HTML default. CI runs these checks for pull
-requests to `next2`.
+requests to `main`.
